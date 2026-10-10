@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:go_router/go_router.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -24,7 +25,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'Public, private, forked and starred — beautifully organised, searchable in a keystroke, cached for offline.',
       bgColor: const Color(0xFFF3E8FF),
       accentColor: const Color(0xFF8B5CF6),
-      lottiePath: 'assets/lottie/slide_1.json', // ← kubus
+      lottiePath: 'assets/lottie/slide_1.json',
     ),
 
     // ─────────────────────────────────────
@@ -38,7 +39,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'A native diff renderer with syntax highlighting, inline comments and one-tap merges from the train.',
       bgColor: const Color(0xFFFCE7F3),
       accentColor: const Color(0xFFEC4899),
-      lottiePath: 'assets/lottie/slide_2.json', // ← kucing
+      lottiePath: 'assets/lottie/slide_2.json',
     ),
 
     // ─────────────────────────────────────
@@ -52,7 +53,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'Mentions, CI failures and reviews pushed the instant they happen — with smart muting that respects focus.',
       bgColor: const Color(0xFFE0F2FE),
       accentColor: const Color(0xFF06B6D4),
-      lottiePath: 'assets/lottie/slide_3.json', // ← EKG
+      lottiePath: 'assets/lottie/slide_3.json',
     ),
   ];
 
@@ -69,16 +70,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const DonePlaceholder()),
-      );
+      // Get Started → ke Login
+      context.go('/login');
     }
   }
 
   void _skip() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const DonePlaceholder()),
-    );
+    // Skip → langsung ke Login
+    context.go('/login');
   }
 
   @override
@@ -379,20 +378,4 @@ class OnboardingData {
     required this.accentColor,
     required this.lottiePath,
   });
-}
-
-// ─────────────────────────────────────────────
-// PLACEHOLDER
-// ─────────────────────────────────────────────
-class DonePlaceholder extends StatelessWidget {
-  const DonePlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Home — Coming Soon', style: TextStyle(fontSize: 20)),
-      ),
-    );
-  }
 }

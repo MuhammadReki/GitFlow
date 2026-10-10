@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
-import '../onboarding/onboarding_screen.dart';
+import '../../data/services/auth_storage.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -42,12 +43,17 @@ class _SplashScreenState extends State<SplashScreen>
       return true;
     });
 
-    // Navigate ke Onboarding setelah 4 detik
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-        );
+    // Cek login + navigate setelah 4 detik
+    Future.delayed(const Duration(seconds: 4), () async {
+      if (!mounted) return;
+
+      final isLoggedIn = await AuthStorage.isLoggedIn();
+
+      if (!mounted) return;
+      if (isLoggedIn) {
+        context.go('/home');
+      } else {
+        context.go('/onboarding');
       }
     });
   }
@@ -91,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
               const Spacer(flex: 2),
 
               // ─────────────────────────────────────
-              // LOGO — sekarang pake Lottie animation
+              // LOGO — Lottie animation
               // ─────────────────────────────────────
               SizedBox(
                 width: 160,

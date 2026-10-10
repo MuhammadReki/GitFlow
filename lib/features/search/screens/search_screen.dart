@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../data/models/github_repo.dart';
 import '../../../data/models/github_user.dart';
 import '../../../data/services/auth_storage.dart';
 import '../../../data/services/github_api_service.dart';
+import '../../profile/screens/user_profile_external_screen.dart';
 import '../../repos/screens/repo_detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -95,10 +95,12 @@ class _SearchScreenState extends State<SearchScreen>
   }
 
   Future<void> _openUser(GitHubUser user) async {
-    final uri = Uri.parse('https://github.com/${user.login}');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserProfileExternalScreen(username: user.login),
+      ),
+    );
   }
 
   @override

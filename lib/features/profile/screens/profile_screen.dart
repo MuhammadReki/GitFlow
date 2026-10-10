@@ -6,6 +6,9 @@ import '../../../data/models/github_repo.dart';
 import '../../../data/services/auth_storage.dart';
 import '../../../data/services/github_api_service.dart';
 import '../../repos/screens/repo_detail_screen.dart';
+import 'edit_profile_screen.dart';
+import 'followers_screen.dart';
+import 'starred_repos_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -78,7 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _openRepo(GitHubRepo repo) async {
     final parts = repo.fullName.split('/');
     if (parts.length == 2) {
-      Navigator.push(
+      await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => RepoDetailScreen(
@@ -87,7 +90,31 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ),
       );
+      _loadProfile();
     }
+  }
+
+  Future<void> _openFollowers({required bool showFollowing}) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FollowersScreen(
+          showFollowingFirst: showFollowing,
+        ),
+      ),
+    );
+    _loadProfile();
+  }
+
+  Future<void> _openEditProfile() async {
+    if (_user == null) return;
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditProfileScreen(user: _user!),
+      ),
+    );
+    if (result == true) _loadProfile();
   }
 
   @override
@@ -146,29 +173,55 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ═══ HEADER (avatar + nama + bio) ═══
+  // ═══ HEADER ═══
   Widget _buildHeader(GitHubUser user) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
       child: Column(
         children: [
-          Container(
-            width: 110,
-            height: 110,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF6366F1), width: 3),
-              image: user.avatarUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(user.avatarUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            child: user.avatarUrl == null
-                ? const Icon(Icons.person,
-                    color: Color(0xFF6366F1), size: 55)
-                : null,
+          Stack(
+            children: [
+              Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: const Color(0xFF6366F1), width: 3),
+                  image: user.avatarUrl != null
+                      ? DecorationImage(
+                          image: NetworkImage(user.avatarUrl!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: user.avatarUrl == null
+                    ? const Icon(Icons.person,
+                        color: Color(0xFF6366F1), size: 55)
+                    : null,
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: _openEditProfile,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.edit_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Text(
@@ -211,13 +264,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ═══ INFO SECTION (stats + details) ═══
+  // ═══ INFO SECTION ═══
   Widget _buildInfoSection(GitHubUser user) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          // Stats card
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -238,8 +290,16 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Row(
               children: [
                 _buildStatBox('${user.publicRepos}', 'Repos'),
-                _buildStatBox('${user.followers}', 'Followers'),
-                _buildStatBox('${user.following}', 'Following'),
+                _buildStatBox(
+                  '${user.followers}',
+                  'Followers',
+                  onTap: () => _openFollowers(showFollowing: false),
+                ),
+                _buildStatBox(
+                  '${user.following}',
+                  'Following',
+                  onTap: () => _openFollowers(showFollowing: true),
+                ),
                 _buildStatBox('${user.publicGists}', 'Gists'),
               ],
             ),
@@ -247,7 +307,6 @@ class _ProfileScreenState extends State<ProfileScreen>
 
           const SizedBox(height: 16),
 
-          // Detail rows
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -302,30 +361,33 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildStatBox(String value, String label) {
+  Widget _buildStatBox(String value, String label, {VoidCallback? onTap}) {
     return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: Colors.white70,
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: Colors.white70,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -407,39 +469,15 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: TabBarView(
         controller: _tabController,
         children: [
-          _buildReposList(_repos, false),
-          _buildReposList([], true), // Placeholder starred
+          _buildReposList(),
+          _buildStarredTab(),
         ],
       ),
     );
   }
 
-  Widget _buildReposList(List<GitHubRepo> repos, bool isStarred) {
-    if (isStarred) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.star_border_rounded,
-                  size: 60, color: Colors.grey[400]),
-              const SizedBox(height: 16),
-              const Text(
-                'Starred repos coming soon',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (repos.isEmpty) {
+  Widget _buildReposList() {
+    if (_repos.isEmpty) {
       return const Center(
         child: Text(
           'Belum ada repo',
@@ -454,9 +492,76 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-      itemCount: repos.length,
+      itemCount: _repos.length,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (_, i) => _buildRepoCard(repos[i]),
+      itemBuilder: (_, i) => _buildRepoCard(_repos[i]),
+    );
+  }
+
+  Widget _buildStarredTab() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.star_rounded,
+                size: 40,
+                color: Color(0xFFF59E0B),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Starred Repositories',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Liat semua repo yang lu udah star',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 13,
+                color: Color(0xFF6B7280),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const StarredReposScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.star_rounded, size: 18),
+              label: const Text('Liat Starred Repos'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF59E0B),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -8,6 +8,11 @@ import '../models/github_commit.dart';
 import '../models/github_comment.dart';
 import '../models/github_branch.dart';
 import '../models/github_pr.dart';
+import '../models/github_commit_detail.dart';
+import '../models/github_release.dart';
+import '../models/github_code_search.dart';
+import '../models/github_gist.dart';
+import '../models/github_action.dart';
 
 class GitHubApiService {
   static const String _baseUrl = 'https://api.github.com';
@@ -59,6 +64,122 @@ class GitHubApiService {
     } on DioException catch (e) {
       print('getUserByUsername error: ${e.message}');
       return null;
+    }
+  }
+
+  // ═══ UPDATE PROFILE ═══
+  static Future<Map<String, dynamic>?> updateProfile(
+    String token, {
+    String? name,
+    String? bio,
+    String? company,
+    String? location,
+    String? blog,
+    String? twitterUsername,
+    String? hireable,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (name != null) data['name'] = name;
+      if (bio != null) data['bio'] = bio;
+      if (company != null) data['company'] = company;
+      if (location != null) data['location'] = location;
+      if (blog != null) data['blog'] = blog;
+      if (twitterUsername != null) {
+        data['twitter_username'] = twitterUsername;
+      }
+      if (hireable != null) data['hireable'] = hireable == 'true';
+
+      final response = await _dio(token).patch('/user', data: data);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      print('updateProfile error: ${e.response?.data ?? e.message}');
+      return null;
+    }
+  }
+
+  // ═══ FOLLOWERS / FOLLOWING ═══
+  static Future<List<GitHubUser>> getFollowers(
+    String token, {
+    String? username,
+    int perPage = 100,
+  }) async {
+    try {
+      final endpoint =
+          username == null ? '/user/followers' : '/users/$username/followers';
+      final response = await _dio(token).get(
+        endpoint,
+        queryParameters: {'per_page': perPage},
+      );
+      final List<dynamic> data = response.data as List<dynamic>;
+      return data
+          .map((e) => GitHubUser.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('getFollowers error: ${e.message}');
+      return [];
+    }
+  }
+
+  static Future<List<GitHubUser>> getFollowing(
+    String token, {
+    String? username,
+    int perPage = 100,
+  }) async {
+    try {
+      final endpoint =
+          username == null ? '/user/following' : '/users/$username/following';
+      final response = await _dio(token).get(
+        endpoint,
+        queryParameters: {'per_page': perPage},
+      );
+      final List<dynamic> data = response.data as List<dynamic>;
+      return data
+          .map((e) => GitHubUser.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('getFollowing error: ${e.message}');
+      return [];
+    }
+  }
+
+  static Future<bool> checkFollowing(
+    String token,
+    String username,
+  ) async {
+    try {
+      final response = await _dio(token).get('/user/following/$username');
+      return response.statusCode == 204;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return false;
+      print('checkFollowing error: ${e.message}');
+      return false;
+    }
+  }
+
+  static Future<bool> followUser(
+    String token,
+    String username,
+  ) async {
+    try {
+      await _dio(token).put('/user/following/$username');
+      return true;
+    } on DioException catch (e) {
+      print('followUser error: ${e.message}');
+      return false;
+    }
+  }
+
+  static Future<bool> unfollowUser(
+    String token,
+    String username,
+  ) async {
+    try {
+      await _dio(token).delete('/user/following/$username');
+      return true;
+    } on DioException catch (e) {
+      print('unfollowUser error: ${e.message}');
+      return false;
     }
   }
 
@@ -117,6 +238,98 @@ class GitHubApiService {
     } on DioException catch (e) {
       print('getRepo error: ${e.message}');
       return null;
+    }
+  }
+
+  // ═══ CREATE REPO ═══
+  static Future<Map<String, dynamic>?> createRepo(
+    String token, {
+    required String name,
+    String? description,
+    bool private = false,
+    bool autoInit = true,
+    String? gitignoreTemplate,
+    String? licenseTemplate,
+    String? homepage,
+    bool hasIssues = true,
+    bool hasProjects = true,
+    bool hasWiki = false,
+  }) async {
+    try {
+      final data = <String, dynamic>{
+        'name': name,
+        'private': private,
+        'auto_init': autoInit,
+        'has_issues': hasIssues,
+        'has_projects': hasProjects,
+        'has_wiki': hasWiki,
+      };
+      if (description != null && description.isNotEmpty) {
+        data['description'] = description;
+      }
+      if (gitignoreTemplate != null && gitignoreTemplate.isNotEmpty) {
+        data['gitignore_template'] = gitignoreTemplate;
+      }
+      if (licenseTemplate != null && licenseTemplate.isNotEmpty) {
+        data['license_template'] = licenseTemplate;
+      }
+      if (homepage != null && homepage.isNotEmpty) {
+        data['homepage'] = homepage;
+      }
+
+      final response = await _dio(token).post('/user/repos', data: data);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      print('createRepo error: ${e.response?.data ?? e.message}');
+      return null;
+    }
+  }
+
+  // ═══ STARRED REPOS ═══
+  static Future<List<GitHubRepo>> getMyStarredRepos(
+    String token, {
+    int perPage = 100,
+  }) async {
+    try {
+      final response = await _dio(token).get(
+        '/user/starred',
+        queryParameters: {
+          'per_page': perPage,
+          'sort': 'updated',
+          'direction': 'desc',
+        },
+      );
+      final List<dynamic> data = response.data as List<dynamic>;
+      return data
+          .map((e) => GitHubRepo.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('getMyStarredRepos error: ${e.message}');
+      return [];
+    }
+  }
+
+  static Future<List<GitHubRepo>> getUserStarredRepos(
+    String token,
+    String username, {
+    int perPage = 100,
+  }) async {
+    try {
+      final response = await _dio(token).get(
+        '/users/$username/starred',
+        queryParameters: {
+          'per_page': perPage,
+          'sort': 'updated',
+          'direction': 'desc',
+        },
+      );
+      final List<dynamic> data = response.data as List<dynamic>;
+      return data
+          .map((e) => GitHubRepo.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('getUserStarredRepos error: ${e.message}');
+      return [];
     }
   }
 
@@ -449,6 +662,26 @@ class GitHubApiService {
     }
   }
 
+  // ═══ COMMIT DETAIL WITH FILES ═══
+  static Future<GitHubCommitDetail?> getCommitWithFiles(
+    String token,
+    String owner,
+    String repo,
+    String sha,
+  ) async {
+    try {
+      final response = await _dio(token).get(
+        '/repos/$owner/$repo/commits/$sha',
+      );
+      return GitHubCommitDetail.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+    } on DioException catch (e) {
+      print('getCommitWithFiles error: ${e.message}');
+      return null;
+    }
+  }
+
   // ═══ FORK REPO ═══
   static Future<Map<String, dynamic>?> forkRepo(
     String token,
@@ -576,6 +809,71 @@ class GitHubApiService {
     }
   }
 
+  // ═══ UPDATE ISSUE ═══
+  static Future<Map<String, dynamic>?> updateIssue(
+    String token,
+    String owner,
+    String repo,
+    int issueNumber, {
+    String? title,
+    String? body,
+    String? state,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (title != null) data['title'] = title;
+      if (body != null) data['body'] = body;
+      if (state != null) data['state'] = state;
+
+      final response = await _dio(token).patch(
+        '/repos/$owner/$repo/issues/$issueNumber',
+        data: data,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      print('updateIssue error: ${e.response?.data ?? e.message}');
+      return null;
+    }
+  }
+
+  // ═══ CLOSE ISSUE ═══
+  static Future<bool> closeIssue(
+    String token,
+    String owner,
+    String repo,
+    int issueNumber,
+  ) async {
+    try {
+      await _dio(token).patch(
+        '/repos/$owner/$repo/issues/$issueNumber',
+        data: {'state': 'closed'},
+      );
+      return true;
+    } on DioException catch (e) {
+      print('closeIssue error: ${e.response?.data ?? e.message}');
+      return false;
+    }
+  }
+
+  // ═══ REOPEN ISSUE ═══
+  static Future<bool> reopenIssue(
+    String token,
+    String owner,
+    String repo,
+    int issueNumber,
+  ) async {
+    try {
+      await _dio(token).patch(
+        '/repos/$owner/$repo/issues/$issueNumber',
+        data: {'state': 'open'},
+      );
+      return true;
+    } on DioException catch (e) {
+      print('reopenIssue error: ${e.response?.data ?? e.message}');
+      return false;
+    }
+  }
+
   // ═══ BRANCHES ═══
   static Future<List<GitHubBranch>> getBranches(
     String token,
@@ -694,6 +992,281 @@ class GitHubApiService {
     } on DioException catch (e) {
       print('mergePR error: ${e.response?.data ?? e.message}');
       return false;
+    }
+  }
+
+  // ═══ RELEASES ═══
+  static Future<List<GitHubRelease>> getReleases(
+    String token,
+    String owner,
+    String repo, {
+    int perPage = 30,
+  }) async {
+    try {
+      final response = await _dio(token).get(
+        '/repos/$owner/$repo/releases',
+        queryParameters: {'per_page': perPage},
+      );
+      final List<dynamic> data = response.data as List<dynamic>;
+      return data
+          .map((e) => GitHubRelease.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('getReleases error: ${e.message}');
+      return [];
+    }
+  }
+
+  static Future<GitHubRelease?> getLatestRelease(
+    String token,
+    String owner,
+    String repo,
+  ) async {
+    try {
+      final response = await _dio(token).get(
+        '/repos/$owner/$repo/releases/latest',
+      );
+      return GitHubRelease.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      print('getLatestRelease error: ${e.message}');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> createRelease(
+    String token,
+    String owner,
+    String repo, {
+    required String tagName,
+    String? targetCommitish,
+    String? name,
+    String? body,
+    bool draft = false,
+    bool prerelease = false,
+  }) async {
+    try {
+      final response = await _dio(token).post(
+        '/repos/$owner/$repo/releases',
+        data: {
+          'tag_name': tagName,
+          if (targetCommitish != null && targetCommitish.isNotEmpty)
+            'target_commitish': targetCommitish,
+          if (name != null && name.isNotEmpty) 'name': name,
+          if (body != null && body.isNotEmpty) 'body': body,
+          'draft': draft,
+          'prerelease': prerelease,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      print('createRelease error: ${e.response?.data ?? e.message}');
+      return null;
+    }
+  }
+
+  static Future<bool> deleteRelease(
+    String token,
+    String owner,
+    String repo,
+    int releaseId,
+  ) async {
+    try {
+      await _dio(token).delete(
+        '/repos/$owner/$repo/releases/$releaseId',
+      );
+      return true;
+    } on DioException catch (e) {
+      print('deleteRelease error: ${e.response?.data ?? e.message}');
+      return false;
+    }
+  }
+
+  // ═══ CODE SEARCH ═══
+  static Future<List<GitHubCodeSearchResult>> searchCode(
+    String token,
+    String owner,
+    String repo,
+    String query, {
+    int perPage = 30,
+  }) async {
+    if (query.trim().isEmpty) return [];
+    try {
+      final response = await _dio(token).get(
+        '/search/code',
+        queryParameters: {
+          'q': '$query repo:$owner/$repo',
+          'per_page': perPage,
+        },
+      );
+      final items = (response.data['items'] as List<dynamic>? ?? <dynamic>[]);
+      return items
+          .map((e) =>
+              GitHubCodeSearchResult.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('searchCode error: ${e.response?.data ?? e.message}');
+      return [];
+    }
+  }
+
+  // ═══ GET FILE CONTENT ═══
+  static Future<String?> getFileContent(
+    String token,
+    String owner,
+    String repo,
+    String path,
+  ) async {
+    try {
+      final response = await _dio(token).get(
+        '/repos/$owner/$repo/contents/$path',
+        options: Options(
+          headers: {'Accept': 'application/vnd.github.raw+json'},
+        ),
+      );
+      return response.data as String?;
+    } on DioException catch (e) {
+      print('getFileContent error: ${e.message}');
+      return null;
+    }
+  }
+
+  // ═══ GISTS ═══
+  static Future<List<GitHubGist>> getMyGists(
+    String token, {
+    int perPage = 30,
+  }) async {
+    try {
+      final response = await _dio(token).get(
+        '/gists',
+        queryParameters: {'per_page': perPage},
+      );
+      final List<dynamic> data = response.data as List<dynamic>;
+      return data
+          .map((e) => GitHubGist.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('getMyGists error: ${e.message}');
+      return [];
+    }
+  }
+
+  static Future<GitHubGist?> getGistDetail(
+    String token,
+    String gistId,
+  ) async {
+    try {
+      final response = await _dio(token).get('/gists/$gistId');
+      return GitHubGist.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      print('getGistDetail error: ${e.message}');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> createGist(
+    String token, {
+    required String filename,
+    required String content,
+    String? description,
+    bool public = true,
+  }) async {
+    try {
+      final response = await _dio(token).post(
+        '/gists',
+        data: {
+          'description': description ?? '',
+          'public': public,
+          'files': {
+            filename: {'content': content},
+          },
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      print('createGist error: ${e.response?.data ?? e.message}');
+      return null;
+    }
+  }
+
+  static Future<bool> deleteGist(
+    String token,
+    String gistId,
+  ) async {
+    try {
+      await _dio(token).delete('/gists/$gistId');
+      return true;
+    } on DioException catch (e) {
+      print('deleteGist error: ${e.response?.data ?? e.message}');
+      return false;
+    }
+  }
+
+  // ═══ GITHUB ACTIONS ═══
+  static Future<List<GitHubWorkflow>> getWorkflows(
+    String token,
+    String owner,
+    String repo,
+  ) async {
+    try {
+      final response = await _dio(token).get(
+        '/repos/$owner/$repo/actions/workflows',
+      );
+      final workflowsJson =
+          response.data['workflows'] as List<dynamic>? ?? <dynamic>[];
+      return workflowsJson
+          .map((e) => GitHubWorkflow.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('getWorkflows error: ${e.message}');
+      return [];
+    }
+  }
+
+  static Future<List<GitHubWorkflowRun>> getWorkflowRuns(
+    String token,
+    String owner,
+    String repo, {
+    int perPage = 30,
+    int? workflowId,
+  }) async {
+    try {
+      final endpoint = workflowId == null
+          ? '/repos/$owner/$repo/actions/runs'
+          : '/repos/$owner/$repo/actions/workflows/$workflowId/runs';
+      final response = await _dio(token).get(
+        endpoint,
+        queryParameters: {'per_page': perPage},
+      );
+      final runsJson =
+          response.data['workflow_runs'] as List<dynamic>? ?? <dynamic>[];
+      return runsJson
+          .map((e) => GitHubWorkflowRun.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('getWorkflowRuns error: ${e.message}');
+      return [];
+    }
+  }
+
+  static Future<List<GitHubWorkflowJob>> getWorkflowRunJobs(
+    String token,
+    String owner,
+    String repo,
+    int runId,
+  ) async {
+    try {
+      final response = await _dio(token).get(
+        '/repos/$owner/$repo/actions/runs/$runId/jobs',
+      );
+      final jobsJson =
+          response.data['jobs'] as List<dynamic>? ?? <dynamic>[];
+      return jobsJson
+          .map((e) => GitHubWorkflowJob.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('getWorkflowRunJobs error: ${e.message}');
+      return [];
     }
   }
 }

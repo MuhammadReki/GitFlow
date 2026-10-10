@@ -5,12 +5,14 @@ import '../../../data/models/github_user.dart';
 import '../../../data/models/github_repo.dart';
 import '../../../data/services/auth_storage.dart';
 import '../../../data/services/github_api_service.dart';
-import '../../repos/screens/repos_screen.dart';
+import '../../gists/screens/gists_screen.dart';
 import '../../issues/screens/issues_screen.dart';
-import '../../prs/screens/prs_screen.dart';
 import '../../notifications/screens/notifications_screen.dart';
-import '../../search/screens/search_screen.dart';
+import '../../prs/screens/prs_screen.dart';
 import '../../profile/screens/profile_screen.dart';
+import '../../repos/screens/create_repo_screen.dart';
+import '../../repos/screens/repos_screen.dart';
+import '../../search/screens/search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -99,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // ═════════════════════════════════════
-// TAB 1 — HOME
+// TAB 1 тАФ HOME
 // ═════════════════════════════════════
 class _HomeTab extends StatefulWidget {
   const _HomeTab();
@@ -214,7 +216,7 @@ class _HomeTabState extends State<_HomeTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Hello, ${_user?.name ?? _user?.login ?? 'User'} 👋',
+                        'Hello, ${_user?.name ?? _user?.login ?? 'User'} ЁЯСЛ',
                         style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 16,
@@ -337,6 +339,43 @@ class _HomeTabState extends State<_HomeTab> {
                           builder: (_) => const PRsScreen(),
                         ),
                       );
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildQuickCard(
+                    icon: Icons.code_rounded,
+                    label: 'My Gists',
+                    color: const Color(0xFFF59E0B),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const GistsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildQuickCard(
+                    icon: Icons.add_circle_outline_rounded,
+                    label: 'New Repo',
+                    color: const Color(0xFFEC4899),
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CreateRepoScreen(),
+                        ),
+                      );
+                      if (result != null) _loadData();
                     },
                   ),
                 ),

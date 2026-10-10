@@ -8,10 +8,14 @@ import '../../../data/models/github_commit.dart';
 import '../../../data/models/github_pr.dart';
 import '../../../data/services/auth_storage.dart';
 import '../../../data/services/github_api_service.dart';
+import '../../actions/screens/actions_screen.dart';
 import '../../issues/screens/create_issue_screen.dart';
 import '../../issues/screens/issue_detail_screen.dart';
 import '../../prs/screens/create_pr_screen.dart';
 import '../../prs/screens/pr_detail_screen.dart';
+import '../../releases/screens/releases_screen.dart';
+import 'code_search_screen.dart';
+import 'commit_detail_screen.dart';
 
 class RepoDetailScreen extends StatefulWidget {
   final String owner;
@@ -306,12 +310,53 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
     }
   }
 
-  Future<void> _openCommitInBrowser(GitHubCommit commit) async {
-    if (commit.htmlUrl == null) return;
-    final uri = Uri.parse(commit.htmlUrl!);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+  Future<void> _openCommitDetail(GitHubCommit commit) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CommitDetailScreen(
+          owner: widget.owner,
+          repoName: widget.repoName,
+          sha: commit.sha,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openReleases() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReleasesScreen(
+          owner: widget.owner,
+          repoName: widget.repoName,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openCodeSearch() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CodeSearchScreen(
+          owner: widget.owner,
+          repoName: widget.repoName,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openActions() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ActionsScreen(
+          owner: widget.owner,
+          repoName: widget.repoName,
+        ),
+      ),
+    );
   }
 
   @override
@@ -431,6 +476,7 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Star + Fork
           Row(
             children: [
               Expanded(child: _buildStarButton()),
@@ -438,6 +484,40 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
               Expanded(child: _buildForkButton()),
             ],
           ),
+          const SizedBox(height: 10),
+
+          // Releases + Search + Actions
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.rocket_launch_outlined,
+                  label: 'Releases',
+                  color: const Color(0xFF6366F1),
+                  onTap: _openReleases,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.search_rounded,
+                  label: 'Search',
+                  color: const Color(0xFF8B5CF6),
+                  onTap: _openCodeSearch,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.play_circle_outline_rounded,
+                  label: 'Actions',
+                  color: const Color(0xFFF59E0B),
+                  onTap: _openActions,
+                ),
+              ),
+            ],
+          ),
+
           const SizedBox(height: 16),
           if (repo.description != null && repo.description!.isNotEmpty) ...[
             Text(
@@ -618,6 +698,44 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
                 color: hasForked
                     ? const Color(0xFF6366F1)
                     : const Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -844,7 +962,7 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
 
   Widget _buildCommitCard(GitHubCommit commit) {
     return GestureDetector(
-      onTap: () => _openCommitInBrowser(commit),
+      onTap: () => _openCommitDetail(commit),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -940,8 +1058,8 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Icon(Icons.open_in_new_rounded,
-                    size: 14, color: Color(0xFF9CA3AF)),
+                const Icon(Icons.chevron_right_rounded,
+                    size: 16, color: Color(0xFF9CA3AF)),
               ],
             ),
           ],

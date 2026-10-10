@@ -5,6 +5,7 @@ import '../../../data/models/github_issue.dart';
 import '../../../data/models/github_comment.dart';
 import '../../../data/services/auth_storage.dart';
 import '../../../data/services/github_api_service.dart';
+import 'edit_issue_screen.dart';
 
 class IssueDetailScreen extends StatefulWidget {
   final String owner;
@@ -28,6 +29,7 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
   bool _isLoading = true;
   String? _error;
   String? _token;
+  bool _isUpdatingState = false;
 
   final _commentController = TextEditingController();
   bool _isSendingComment = false;
@@ -78,6 +80,102 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
       _comments = comments;
       _isLoading = false;
     });
+  }
+
+  Future<void> _toggleState() async {
+    if (_issue == null || _token == null) return;
+
+    final isClosing = _issue!.isOpen;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          isClosing ? 'Close Issue' : 'Reopen Issue',
+          style: const TextStyle(fontFamily: 'Inter'),
+        ),
+        content: Text(
+          isClosing
+              ? 'Yakin mau tutup issue ini?'
+              : 'Yakin mau buka lagi issue ini?',
+          style: const TextStyle(fontFamily: 'Inter'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isClosing
+                  ? const Color(0xFFDC2626)
+                  : const Color(0xFF10B981),
+            ),
+            child: Text(isClosing ? 'Close' : 'Reopen'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isUpdatingState = true);
+
+    bool ok;
+    if (isClosing) {
+      ok = await GitHubApiService.closeIssue(
+        _token!,
+        widget.owner,
+        widget.repoName,
+        widget.issueNumber,
+      );
+    } else {
+      ok = await GitHubApiService.reopenIssue(
+        _token!,
+        widget.owner,
+        widget.repoName,
+        widget.issueNumber,
+      );
+    }
+
+    if (!mounted) return;
+
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isClosing
+              ? 'Issue berhasil ditutup'
+              : 'Issue berhasil dibuka lagi'),
+          backgroundColor: const Color(0xFF10B981),
+        ),
+      );
+      _loadAll();
+    } else {
+      setState(() => _isUpdatingState = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal update status issue'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+    }
+  }
+
+  Future<void> _openEdit() async {
+    if (_issue == null) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditIssueScreen(
+          owner: widget.owner,
+          repoName: widget.repoName,
+          issue: _issue!,
+        ),
+      ),
+    );
+
+    if (result == true) _loadAll();
   }
 
   Future<void> _sendComment() async {
@@ -150,9 +248,30 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
           ),
         ),
         actions: [
+          if (_issue != null) ...[
+            IconButton(
+              icon: const Icon(Icons.edit_rounded,
+                  color: Color(0xFF6366F1), size: 20),
+              onPressed: _openEdit,
+              tooltip: 'Edit Issue',
+            ),
+            IconButton(
+              icon: Icon(
+                _issue!.isOpen
+                    ? Icons.check_circle_outline_rounded
+                    : Icons.refresh_rounded,
+                color: _issue!.isOpen
+                    ? const Color(0xFF10B981)
+                    : const Color(0xFFF59E0B),
+                size: 20,
+              ),
+              onPressed: _isUpdatingState ? null : _toggleState,
+              tooltip: _issue!.isOpen ? 'Close Issue' : 'Reopen Issue',
+            ),
+          ],
           IconButton(
             icon: const Icon(Icons.open_in_new_rounded,
-                color: Color(0xFF6366F1), size: 20),
+                color: Color(0xFF6B7280), size: 20),
             onPressed: _openInBrowser,
           ),
         ],
@@ -187,7 +306,6 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Status badge
                 Row(
                   children: [
                     Container(
@@ -231,7 +349,6 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Title
                 Text(
                   issue.title,
                   style: const TextStyle(
@@ -244,7 +361,6 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Author
                 Row(
                   children: [
                     if (issue.userAvatar != null)
@@ -274,7 +390,6 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                   ],
                 ),
 
-                // Labels
                 if (issue.labels.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Wrap(
@@ -303,7 +418,6 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                   ),
                 ],
 
-                // Body
                 if (issue.body != null && issue.body!.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   Container(
@@ -326,7 +440,6 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                   ),
                 ],
 
-                // Comments section
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -388,7 +501,6 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
           ),
         ),
 
-        // Comment input
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(

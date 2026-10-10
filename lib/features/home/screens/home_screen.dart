@@ -5,6 +5,12 @@ import '../../../data/models/github_user.dart';
 import '../../../data/models/github_repo.dart';
 import '../../../data/services/auth_storage.dart';
 import '../../../data/services/github_api_service.dart';
+import '../../repos/screens/repos_screen.dart';
+import '../../issues/screens/issues_screen.dart';
+import '../../prs/screens/prs_screen.dart';
+import '../../notifications/screens/notifications_screen.dart';
+import '../../search/screens/search_screen.dart';
+import '../../profile/screens/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,9 +31,9 @@ class _HomeScreenState extends State<HomeScreen> {
           index: _currentTab,
           children: const [
             _HomeTab(),
-            _ReposTab(),
-            _NotificationsTab(),
-            _ProfileTab(),
+            ReposScreen(),
+            NotificationsScreen(),
+            ProfileScreen(),
           ],
         ),
       ),
@@ -228,6 +234,18 @@ class _HomeTabState extends State<_HomeTab> {
                     ],
                   ),
                 ),
+                IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SearchScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.search_rounded),
+                  color: const Color(0xFF6366F1),
+                ),
               ],
             ),
 
@@ -273,6 +291,56 @@ class _HomeTabState extends State<_HomeTab> {
                   ),
                 ],
               ),
+            ),
+
+            const SizedBox(height: 28),
+
+            // ─── QUICK ACCESS ───
+            const Text(
+              'Quick Access',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildQuickCard(
+                    icon: Icons.error_outline_rounded,
+                    label: 'Issues',
+                    color: const Color(0xFF10B981),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const IssuesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildQuickCard(
+                    icon: Icons.merge_type_rounded,
+                    label: 'Pull Requests',
+                    color: const Color(0xFF8B5CF6),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PRsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 28),
@@ -353,6 +421,49 @@ class _HomeTabState extends State<_HomeTab> {
     );
   }
 
+  Widget _buildQuickCard({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildRepoCard(GitHubRepo repo) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -389,7 +500,8 @@ class _HomeTabState extends State<_HomeTab> {
               ),
             ],
           ),
-          if (repo.description != null && repo.description!.isNotEmpty) ...[
+          if (repo.description != null &&
+              repo.description!.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
               repo.description!,
@@ -450,208 +562,6 @@ class _HomeTabState extends State<_HomeTab> {
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ═════════════════════════════════════
-// TAB 2 — REPOS
-// ═════════════════════════════════════
-class _ReposTab extends StatelessWidget {
-  const _ReposTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Repos — Coming Soon',
-        style: TextStyle(fontFamily: 'Inter', fontSize: 16),
-      ),
-    );
-  }
-}
-
-// ═════════════════════════════════════
-// TAB 3 — NOTIFICATIONS
-// ═════════════════════════════════════
-class _NotificationsTab extends StatelessWidget {
-  const _NotificationsTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Notifications — Coming Soon',
-        style: TextStyle(fontFamily: 'Inter', fontSize: 16),
-      ),
-    );
-  }
-}
-
-// ═════════════════════════════════════
-// TAB 4 — PROFILE
-// ═════════════════════════════════════
-class _ProfileTab extends StatefulWidget {
-  const _ProfileTab();
-
-  @override
-  State<_ProfileTab> createState() => _ProfileTabState();
-}
-
-class _ProfileTabState extends State<_ProfileTab> {
-  GitHubUser? _user;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUser();
-  }
-
-  Future<void> _loadUser() async {
-    final token = await AuthStorage.getToken();
-    if (token == null) return;
-    final user = await GitHubApiService.getUser(token);
-    if (!mounted) return;
-    setState(() {
-      _user = user;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _logout() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout', style: TextStyle(fontFamily: 'Inter')),
-        content: const Text(
-          'Yakin mau logout dari GitFlow?',
-          style: TextStyle(fontFamily: 'Inter'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDC2626),
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await AuthStorage.clear();
-      if (mounted) context.go('/login');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF6366F1)),
-      );
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-
-          // Avatar
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF6366F1), width: 3),
-              image: _user?.avatarUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(_user!.avatarUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            child: _user?.avatarUrl == null
-                ? const Icon(Icons.person,
-                    color: Color(0xFF6366F1), size: 50)
-                : null,
-          ),
-
-          const SizedBox(height: 16),
-
-          Text(
-            _user?.name ?? _user?.login ?? 'User',
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF111827),
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          Text(
-            '@${_user?.login ?? ''}',
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14,
-              color: Color(0xFF6B7280),
-            ),
-          ),
-
-          if (_user?.bio != null && _user!.bio!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                _user!.bio!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 13,
-                  color: Color(0xFF6B7280),
-                  height: 1.5,
-                ),
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 24),
-
-          // Logout button
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: OutlinedButton.icon(
-              onPressed: _logout,
-              icon: const Icon(Icons.logout_rounded, size: 18),
-              label: const Text(
-                'Logout',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFDC2626),
-                side: const BorderSide(color: Color(0xFFFECACA), width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
           ),
         ],
       ),

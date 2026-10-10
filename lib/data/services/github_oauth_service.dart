@@ -15,10 +15,9 @@ class GitHubOAuthService {
 
   // ─────────────────────────────────────
   // KONFIGURASI GOOGLE
-  // тЪая╕П GANTI INI: copy pake tombol ЁЯУЛ di Google Console
   // ─────────────────────────────────────
   static const String googleClientId =
-      'PASTE_CLIENT_ID_DISINI.apps.googleusercontent.com';
+      '624229663803-t35e11h0ver1p78f4tji9vaovff0otof.apps.googleusercontent.com';
   static const String googleRedirectUri =
       'https://gitflow-backend-xi.vercel.app/api/auth/google/callback';
   static const String googleScopes = 'email profile';
@@ -54,7 +53,6 @@ class GitHubOAuthService {
       (uri) {
         debugPrint('[GitHubOAuth] ЁЯФЧ Deep link masuk: $uri');
 
-        // тмЗ Lebih fleksibel: cek scheme aja + path
         final isGitflow = uri.scheme == 'gitflow';
         final isAuth = uri.host == 'auth';
         final isCallback = uri.path == '/callback' || uri.path.isEmpty;
@@ -114,7 +112,8 @@ class GitHubOAuthService {
       }
       return null;
     } on DioException catch (e) {
-      debugPrint('[GitHubOAuth] тЭМ Backend error: ${e.response?.data ?? e.message}');
+      debugPrint(
+          '[GitHubOAuth] тЭМ Backend error: ${e.response?.data ?? e.message}');
       return null;
     } catch (e) {
       debugPrint('[GitHubOAuth] тЭМ Unexpected error: $e');

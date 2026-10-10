@@ -13,6 +13,7 @@ import '../models/github_release.dart';
 import '../models/github_code_search.dart';
 import '../models/github_gist.dart';
 import '../models/github_action.dart';
+import '../models/github_compare.dart';
 
 class GitHubApiService {
   static const String _baseUrl = 'https://api.github.com';
@@ -678,6 +679,25 @@ class GitHubApiService {
       );
     } on DioException catch (e) {
       print('getCommitWithFiles error: ${e.message}');
+      return null;
+    }
+  }
+
+  // ═══ COMPARE BRANCHES ═══
+  static Future<GitHubCompare?> compareBranches(
+    String token,
+    String owner,
+    String repo,
+    String base,
+    String head,
+  ) async {
+    try {
+      final response = await _dio(token).get(
+        '/repos/$owner/$repo/compare/$base...$head',
+      );
+      return GitHubCompare.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      print('compareBranches error: ${e.response?.data ?? e.message}');
       return null;
     }
   }

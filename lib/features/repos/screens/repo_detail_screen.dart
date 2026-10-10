@@ -16,6 +16,7 @@ import '../../prs/screens/pr_detail_screen.dart';
 import '../../releases/screens/releases_screen.dart';
 import 'code_search_screen.dart';
 import 'commit_detail_screen.dart';
+import 'compare_branches_screen.dart';
 
 class RepoDetailScreen extends StatefulWidget {
   final String owner;
@@ -359,6 +360,18 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
     );
   }
 
+  Future<void> _openCompare() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CompareBranchesScreen(
+          owner: widget.owner,
+          repoName: widget.repoName,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -486,7 +499,7 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
           ),
           const SizedBox(height: 10),
 
-          // Releases + Search + Actions
+          // Row 1: Releases + Search
           Row(
             children: [
               Expanded(
@@ -506,13 +519,27 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
                   onTap: _openCodeSearch,
                 ),
               ),
-              const SizedBox(width: 8),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Row 2: Actions + Compare
+          Row(
+            children: [
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.play_circle_outline_rounded,
                   label: 'Actions',
                   color: const Color(0xFFF59E0B),
                   onTap: _openActions,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.compare_arrows_rounded,
+                  label: 'Compare',
+                  color: const Color(0xFFEC4899),
+                  onTap: _openCompare,
                 ),
               ),
             ],

@@ -1,17 +1,68 @@
-# gitflow
+<div align="center">
 
-A new Flutter project.
+<img src="screenshots/01-splash.png" width="120" alt="GitFlow"/>
 
-## Getting Started
+# GitFlow
 
-This project is a starting point for a Flutter application.
+**GitHub client mobile — built with Flutter**
 
-A few resources to get you started if this is your first Flutter project:
+[![Flutter](https://img.shields.io/badge/Flutter-3.47.5-02569B?logo=flutter)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.13.4-0175C2?logo=dart)](https://dart.dev)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+[📥 **Download APK**](https://github.com/MuhammadReki/GitFlow/releases/download/v1.0.0/GitFlow-Mobile.apk)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+</div>
+
+---
+
+## 📱 Screenshots
+
+<div align="center">
+
+| Splash | Onboarding | Login |
+|:------:|:----------:|:-----:|
+| <img src="screenshots/01-splash.png" width="180"/> | <img src="screenshots/02-onboarding-repos.png" width="180"/> | <img src="screenshots/05-login.png" width="180"/> |
+
+| Home | Repos | Profile |
+|:----:|:-----:|:-------:|
+| <img src="screenshots/07-home.png" width="180"/> | <img src="screenshots/08-repos.png" width="180"/> | <img src="screenshots/10-profile.png" width="180"/> |
+
+</div>
+
+---
+
+## ✨ Fitur
+
+- 🔐 **Login** — GitHub OAuth, Google OAuth, Personal Access Token
+- 📦 **Repo** — Browse, search, filter, star, fork, create, delete
+- 🐛 **Issues** — Create, edit, comment, close, reopen
+- 🔀 **PRs** — Create, review, merge, comment
+- 📝 **Commits** — History, diff viewer, comment
+- 🔔 **Notifications** — Filter, mark as read
+- 👤 **Profile** — Edit, followers, following, starred repos
+- 🎨 **Theme** — Light / Dark / System
+- 📋 **Lainnya** — Gists, Releases, Actions, Code Search, Branches
+
+---
+
+## 🛠 Tech Stack
+
+`Flutter` · `Dart` · `GoRouter` · `Dio` · `Provider` · `flutter_secure_storage` · `app_links` · `Lottie` · `Vercel`
+
+---
+
+## 🚀 Cara Install
+
+1. Download APK dari [**Releases**](https://github.com/MuhammadReki/GitFlow/releases)
+2. Buka file APK di HP
+3. Aktifin "Install from unknown source" kalau muncul warning
+4. Install & buka
+5. Login pakai GitHub / Google / PAT
+
+**Build dari source:**
+```bash
+git clone https://github.com/MuhammadReki/GitFlow.git
+cd GitFlow
+flutter pub get
+flutter run

@@ -30,13 +30,17 @@
 
 <div align="center">
 
-| Splash | Onboarding | Login |
-|:------:|:----------:|:-----:|
-| <img src="screenshots/01-splash.png" width="180"/> | <img src="screenshots/02-onboarding-repos.png" width="180"/> | <img src="screenshots/05-login.png" width="180"/> |
+| Splash | Onboarding 1 | Onboarding 2 | Onboarding 3 |
+|:------:|:------------:|:------------:|:------------:|
+| <img src="screenshots/01-splash.png" width="160"/> | <img src="screenshots/02-onboarding-repos.png" width="160"/> | <img src="screenshots/03-onboarding-review.png" width="160"/> | <img src="screenshots/04-onboarding-notif.png" width="160"/> |
 
-| Home | Repos | Profile |
-|:----:|:-----:|:-------:|
-| <img src="screenshots/07-home.png" width="180"/> | <img src="screenshots/08-repos.png" width="180"/> | <img src="screenshots/10-profile.png" width="180"/> |
+| Login | OAuth | Home | Repos |
+|:-----:|:-----:|:----:|:-----:|
+| <img src="screenshots/05-login.png" width="160"/> | <img src="screenshots/06-oauth.png" width="160"/> | <img src="screenshots/07-home.png" width="160"/> | <img src="screenshots/08-repos.png" width="160"/> |
+
+| Notifications | Profile | |
+|:-------------:|:-------:|:-:|
+| <img src="screenshots/09-notifications.png" width="160"/> | <img src="screenshots/10-profile.png" width="160"/> | |
 
 </div>
 

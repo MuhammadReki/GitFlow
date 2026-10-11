@@ -38,9 +38,9 @@
 |:-----:|:-----:|:----:|:-----:|
 | <img src="screenshots/05-login.png" width="160"/> | <img src="screenshots/06-oauth.png" width="160"/> | <img src="screenshots/07-home.png" width="160"/> | <img src="screenshots/08-repos.png" width="160"/> |
 
-| Notifications | Profile | |
-|:-------------:|:-------:|:-:|
-| <img src="screenshots/09-notifications.png" width="160"/> | <img src="screenshots/10-profile.png" width="160"/> | |
+| Notifications | Profile | | |
+|:-------------:|:-------:|:-:|:-:|
+| <img src="screenshots/09-notifications.png" width="160"/> | <img src="screenshots/10-profile.png" width="160"/> | | |
 
 </div>
 

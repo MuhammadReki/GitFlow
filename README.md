@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="screenshots/01-splash.png" width="120" alt="GitFlow"/>
+<img src="assets/images/app_icon.png" width="120" alt="GitFlow"/>
 
 # GitFlow
 

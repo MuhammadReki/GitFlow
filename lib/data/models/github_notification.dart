@@ -1,6 +1,6 @@
 class GitHubNotification {
   final String id;
-  final String? unread;
+  final bool unread;
   final String? reason;
   final String? updatedAt;
   final String? subjectTitle;
@@ -12,7 +12,7 @@ class GitHubNotification {
 
   GitHubNotification({
     required this.id,
-    this.unread,
+    required this.unread,
     this.reason,
     this.updatedAt,
     this.subjectTitle,
@@ -23,7 +23,7 @@ class GitHubNotification {
     this.repoName,
   });
 
-  bool get isUnread => unread != null && unread!.isNotEmpty;
+  bool get isUnread => unread;
 
   String get iconName {
     switch (subjectType) {
@@ -69,8 +69,8 @@ class GitHubNotification {
 
   factory GitHubNotification.fromJson(Map<String, dynamic> json) {
     return GitHubNotification(
-      id: json['id'] as String? ?? '',
-      unread: json['unread'] as String?,
+      id: json['id']?.toString() ?? '',
+      unread: json['unread'] as bool? ?? false,
       reason: json['reason'] as String?,
       updatedAt: json['updated_at'] as String?,
       subjectTitle: json['subject']?['title'] as String?,

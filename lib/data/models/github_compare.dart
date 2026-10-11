@@ -1,7 +1,7 @@
 import 'github_commit_detail.dart';
 
 class GitHubCompare {
-  final String status; // ahead, behind, diverged, identical
+  final String status;
   final int aheadBy;
   final int behindBy;
   final int totalCommits;
@@ -57,9 +57,8 @@ class GitHubCompare {
       files: filesJson
           .map((e) => GitHubCommitFile.fromJson(e as Map<String, dynamic>))
           .toList(),
-      baseBranch: json['base_commit']?['commit']?['message'] as String? != null
-          ? null
-          : null,
+      baseBranch: null,
+      headBranch: null,
     );
   }
 }

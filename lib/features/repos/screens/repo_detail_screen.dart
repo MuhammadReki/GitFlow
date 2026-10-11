@@ -14,6 +14,7 @@ import '../../issues/screens/issue_detail_screen.dart';
 import '../../prs/screens/create_pr_screen.dart';
 import '../../prs/screens/pr_detail_screen.dart';
 import '../../releases/screens/releases_screen.dart';
+import 'branches_screen.dart';
 import 'code_search_screen.dart';
 import 'commit_detail_screen.dart';
 import 'compare_branches_screen.dart';
@@ -52,6 +53,9 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
   bool _isForking = false;
   String? _myForkFullName;
 
+  bool _isOwner = false;
+  bool _isDeleting = false;
+
   String? _token;
 
   @override
@@ -81,6 +85,10 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
       });
       return;
     }
+
+    // Cek apakah ini repo milik user sendiri
+    final me = await GitHubApiService.getUser(_token!);
+    _isOwner = me?.login == widget.owner;
 
     final repo = await GitHubApiService.getRepo(
       _token!,
@@ -288,6 +296,136 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
     }
   }
 
+  // ═══ DELETE REPO ═══
+  Future<void> _confirmDeleteRepo() async {
+    final controller = TextEditingController();
+    bool canDelete = false;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded,
+                    color: Color(0xFFDC2626), size: 24),
+                SizedBox(width: 10),
+                Text(
+                  'Delete Repository',
+                  style: TextStyle(fontFamily: 'Inter'),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Repo "${widget.repoName}" bakal dihapus permanen. Aksi ini gak bisa di-undo.',
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    height: 1.5,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Ketik nama repo buat konfirmasi:',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: TextField(
+                    controller: controller,
+                    onChanged: (v) {
+                      setDialogState(() {
+                        canDelete = v.trim() == widget.repoName;
+                      });
+                    },
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                      color: Color(0xFF111827),
+                    ),
+                    decoration: InputDecoration(
+                      hintText: widget.repoName,
+                      hintStyle: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 13,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: canDelete
+                    ? () => Navigator.pop(ctx, true)
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFDC2626),
+                ),
+                child: const Text('Hapus'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (confirmed != true) return;
+    if (_token == null) return;
+
+    setState(() => _isDeleting = true);
+
+    final ok = await GitHubApiService.deleteRepo(
+      _token!,
+      widget.owner,
+      widget.repoName,
+    );
+
+    if (!mounted) return;
+
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Repo berhasil dihapus'),
+          backgroundColor: Color(0xFF10B981),
+        ),
+      );
+      Navigator.pop(context, true);
+    } else {
+      setState(() => _isDeleting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal hapus repo. Coba lagi.'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+    }
+  }
+
   Future<void> _loadFilesAtPath(String path) async {
     if (_token == null) return;
     final files = await GitHubApiService.getRepoContents(
@@ -372,6 +510,19 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
     );
   }
 
+  Future<void> _openBranches() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BranchesScreen(
+          owner: widget.owner,
+          repoName: widget.repoName,
+        ),
+      ),
+    );
+    _loadAll();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -425,6 +576,22 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
                     color: Color(0xFF6366F1), size: 20),
                 onPressed: _openInBrowser,
               ),
+              if (_isOwner)
+                IconButton(
+                  icon: _isDeleting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFFDC2626),
+                          ),
+                        )
+                      : const Icon(Icons.delete_outline_rounded,
+                          color: Color(0xFFDC2626), size: 20),
+                  onPressed: _isDeleting ? null : _confirmDeleteRepo,
+                  tooltip: 'Delete Repo',
+                ),
             ],
             title: Text(
               repo.name,
@@ -542,6 +709,22 @@ class _RepoDetailScreenState extends State<RepoDetailScreen>
                   onTap: _openCompare,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Row 3: Branches
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  icon: Icons.account_tree_outlined,
+                  label: 'Branches',
+                  color: const Color(0xFF06B6D4),
+                  onTap: _openBranches,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(child: SizedBox()),
             ],
           ),
 

@@ -216,7 +216,7 @@ class _HomeTabState extends State<_HomeTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Hello, ${_user?.name ?? _user?.login ?? 'User'} ЁЯСЛ',
+                        'Hello, ${_user?.name ?? _user?.login ?? 'User'} 👋',
                         style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 16,

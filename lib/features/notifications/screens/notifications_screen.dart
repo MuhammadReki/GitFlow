@@ -27,31 +27,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _load() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
-    _token = await AuthStorage.getToken();
-    if (_token == null) {
+    try {
+      _token = await AuthStorage.getToken();
+      if (_token == null) {
+        if (!mounted) return;
+        setState(() {
+          _error = 'Token tidak ditemukan';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final notifs = await GitHubApiService.getNotifications(
+        _token!,
+        all: !_showUnreadOnly,
+      ).timeout(const Duration(seconds: 15));
+
+      if (!mounted) return;
       setState(() {
-        _error = 'Token tidak ditemukan';
+        _allNotifications = notifs;
+        _filtered = notifs;
         _isLoading = false;
       });
-      return;
+    } catch (e) {
+      debugPrint('🔴 _load error: $e');
+      if (!mounted) return;
+      setState(() {
+        _error = 'Gagal load notifikasi: $e';
+        _isLoading = false;
+      });
     }
-
-    final notifs = await GitHubApiService.getNotifications(
-      _token!,
-      all: !_showUnreadOnly,
-    );
-
-    if (!mounted) return;
-    setState(() {
-      _allNotifications = notifs;
-      _filtered = notifs;
-      _isLoading = false;
-    });
   }
 
   Future<void> _openNotification(GitHubNotification notif) async {
@@ -203,6 +214,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               const SizedBox(height: 16),
               Text(
                 _error!,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 14,

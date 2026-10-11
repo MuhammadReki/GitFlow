@@ -14,6 +14,7 @@ import '../models/github_code_search.dart';
 import '../models/github_gist.dart';
 import '../models/github_action.dart';
 import '../models/github_compare.dart';
+import '../models/github_review.dart';
 
 class GitHubApiService {
   static const String _baseUrl = 'https://api.github.com';
@@ -283,6 +284,21 @@ class GitHubApiService {
     } on DioException catch (e) {
       print('createRepo error: ${e.response?.data ?? e.message}');
       return null;
+    }
+  }
+
+  // ═══ DELETE REPO ═══
+  static Future<bool> deleteRepo(
+    String token,
+    String owner,
+    String repo,
+  ) async {
+    try {
+      await _dio(token).delete('/repos/$owner/$repo');
+      return true;
+    } on DioException catch (e) {
+      print('deleteRepo error: ${e.response?.data ?? e.message}');
+      return false;
     }
   }
 
@@ -683,6 +699,65 @@ class GitHubApiService {
     }
   }
 
+  // ═══ COMMIT COMMENTS ═══
+  static Future<List<GitHubComment>> getCommitComments(
+    String token,
+    String owner,
+    String repo,
+    String sha, {
+    int perPage = 100,
+  }) async {
+    try {
+      final response = await _dio(token).get(
+        '/repos/$owner/$repo/commits/$sha/comments',
+        queryParameters: {'per_page': perPage},
+      );
+      final List<dynamic> data = response.data as List<dynamic>;
+      return data
+          .map((e) => GitHubComment.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('getCommitComments error: ${e.message}');
+      return [];
+    }
+  }
+
+  static Future<GitHubComment?> createCommitComment(
+    String token,
+    String owner,
+    String repo,
+    String sha,
+    String body,
+  ) async {
+    try {
+      final response = await _dio(token).post(
+        '/repos/$owner/$repo/commits/$sha/comments',
+        data: {'body': body},
+      );
+      return GitHubComment.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      print('createCommitComment error: ${e.response?.data ?? e.message}');
+      return null;
+    }
+  }
+
+  static Future<bool> deleteCommitComment(
+    String token,
+    String owner,
+    String repo,
+    int commentId,
+  ) async {
+    try {
+      await _dio(token).delete(
+        '/repos/$owner/$repo/comments/$commentId',
+      );
+      return true;
+    } on DioException catch (e) {
+      print('deleteCommitComment error: ${e.response?.data ?? e.message}');
+      return false;
+    }
+  }
+
   // ═══ COMPARE BRANCHES ═══
   static Future<GitHubCompare?> compareBranches(
     String token,
@@ -916,6 +991,47 @@ class GitHubApiService {
     }
   }
 
+  // ═══ CREATE BRANCH ═══
+  static Future<Map<String, dynamic>?> createBranch(
+    String token,
+    String owner,
+    String repo, {
+    required String branchName,
+    required String fromSha,
+  }) async {
+    try {
+      final response = await _dio(token).post(
+        '/repos/$owner/$repo/git/refs',
+        data: {
+          'ref': 'refs/heads/$branchName',
+          'sha': fromSha,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      print('createBranch error: ${e.response?.data ?? e.message}');
+      return null;
+    }
+  }
+
+  // ═══ DELETE BRANCH ═══
+  static Future<bool> deleteBranch(
+    String token,
+    String owner,
+    String repo,
+    String branchName,
+  ) async {
+    try {
+      await _dio(token).delete(
+        '/repos/$owner/$repo/git/refs/heads/$branchName',
+      );
+      return true;
+    } on DioException catch (e) {
+      print('deleteBranch error: ${e.response?.data ?? e.message}');
+      return false;
+    }
+  }
+
   // ═══ PULL REQUESTS (detail PR) ═══
   static Future<GitHubPR?> getPRDetail(
     String token,
@@ -1011,6 +1127,51 @@ class GitHubApiService {
       return true;
     } on DioException catch (e) {
       print('mergePR error: ${e.response?.data ?? e.message}');
+      return false;
+    }
+  }
+
+  // ═══ GET PR REVIEWS ═══
+  static Future<List<GitHubReview>> getPRReviews(
+    String token,
+    String owner,
+    String repo,
+    int prNumber,
+  ) async {
+    try {
+      final response = await _dio(token).get(
+        '/repos/$owner/$repo/pulls/$prNumber/reviews',
+      );
+      final List<dynamic> data = response.data as List<dynamic>;
+      return data
+          .map((e) => GitHubReview.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      print('getPRReviews error: ${e.message}');
+      return [];
+    }
+  }
+
+  // ═══ SUBMIT PR REVIEW ═══
+  static Future<bool> submitPRReview(
+    String token,
+    String owner,
+    String repo,
+    int prNumber, {
+    required String event,
+    String? body,
+  }) async {
+    try {
+      await _dio(token).post(
+        '/repos/$owner/$repo/pulls/$prNumber/reviews',
+        data: {
+          'event': event,
+          if (body != null && body.isNotEmpty) 'body': body,
+        },
+      );
+      return true;
+    } on DioException catch (e) {
+      print('submitPRReview error: ${e.response?.data ?? e.message}');
       return false;
     }
   }

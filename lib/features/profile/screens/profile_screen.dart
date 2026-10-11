@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../data/models/github_user.dart';
@@ -117,6 +118,113 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (result == true) _loadProfile();
   }
 
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFFDC2626).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: Color(0xFFDC2626),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Logout',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF111827),
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Yakin mau logout dari GitFlow? Lu harus login ulang buat masuk lagi.',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 13,
+            color: Color(0xFF6B7280),
+            height: 1.5,
+          ),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: Color(0xFFE5E7EB)),
+                    ),
+                  ),
+                  child: const Text(
+                    'Batal',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFDC2626),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    await AuthStorage.clear();
+
+    if (!mounted) return;
+    context.go('/login');
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -166,7 +274,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             _buildInfoSection(user),
             _buildTabBar(),
             _buildTabContent(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+            _buildLogoutButton(),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -684,6 +794,48 @@ class _ProfileScreenState extends State<ProfileScreen>
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // ═══ LOGOUT BUTTON ═══
+  Widget _buildLogoutButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GestureDetector(
+        onTap: _logout,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: const Color(0xFFDC2626).withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+          ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.logout_rounded,
+                color: Color(0xFFDC2626),
+                size: 20,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFDC2626),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

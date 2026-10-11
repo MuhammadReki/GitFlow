@@ -10,13 +10,23 @@
 [![Dart](https://img.shields.io/badge/Dart-3.13.4-0175C2?logo=dart)](https://dart.dev)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[📥 **Download APK**](https://github.com/MuhammadReki/GitFlow/releases/download/v1.0.0/GitFlow-Mobile.apk)
+</div>
+
+---
+
+## 📥 Download
+
+<div align="center">
+
+<img src="screenshots/qrcode.png" width="180" alt="QR Code"/>
+
+**Scan QR Code di atas** atau [**klik di sini buat download APK**](https://github.com/MuhammadReki/GitFlow/releases/download/v1.0.0/GitFlow-Mobile.apk)
 
 </div>
 
 ---
 
-## 📱 Screenshots
+## 📸 Screenshots
 
 <div align="center">
 
@@ -54,13 +64,14 @@
 
 ## 🚀 Cara Install
 
-1. Download APK dari [**Releases**](https://github.com/MuhammadReki/GitFlow/releases)
+1. Scan QR code di atas atau download APK dari [**Releases**](https://github.com/MuhammadReki/GitFlow/releases)
 2. Buka file APK di HP
 3. Aktifin "Install from unknown source" kalau muncul warning
 4. Install & buka
 5. Login pakai GitHub / Google / PAT
 
 **Build dari source:**
+
 ```bash
 git clone https://github.com/MuhammadReki/GitFlow.git
 cd GitFlow
